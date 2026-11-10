@@ -1,48 +1,48 @@
-CREATE TABLE IF NOT EXISTS plans (
+CREATE TABLE IF NOT EXISTS customers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    monthly_price DECIMAL(10, 2) NOT NULL,
-    duration_months INT NOT NULL
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20)
 );
 
-CREATE TABLE IF NOT EXISTS members (
+CREATE TABLE IF NOT EXISTS waiters (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
-    plan_id BIGINT NOT NULL REFERENCES plans (id)
+    shift VARCHAR(20) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS instructors (
+CREATE TABLE IF NOT EXISTS tabs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    table_number INT NOT NULL,
+    status VARCHAR(10) NOT NULL,
+    customer_id BIGINT NOT NULL REFERENCES customers (id),
+    waiter_id BIGINT NOT NULL REFERENCES waiters (id)
+);
+
+CREATE TABLE IF NOT EXISTS drinks (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    specialty VARCHAR(100) NOT NULL
+    price DECIMAL(10, 2) NOT NULL,
+    alcoholic BOOLEAN NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS gym_classes (
+CREATE TABLE IF NOT EXISTS ingredients (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    schedule VARCHAR(50) NOT NULL,
-    capacity INT NOT NULL,
-    instructor_id BIGINT NOT NULL REFERENCES instructors (id)
+    unit VARCHAR(10) NOT NULL,
+    stock_quantity INT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS equipment (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    quantity INT NOT NULL
+CREATE TABLE IF NOT EXISTS tab_drinks (
+    tab_id BIGINT NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+    drink_id BIGINT NOT NULL REFERENCES drinks (id) ON DELETE CASCADE,
+    PRIMARY KEY (tab_id, drink_id)
 );
 
-CREATE TABLE IF NOT EXISTS class_members (
-    class_id BIGINT NOT NULL REFERENCES gym_classes (id) ON DELETE CASCADE,
-    member_id BIGINT NOT NULL REFERENCES members (id) ON DELETE CASCADE,
-    PRIMARY KEY (class_id, member_id)
-);
-
-CREATE TABLE IF NOT EXISTS class_equipment (
-    class_id BIGINT NOT NULL REFERENCES gym_classes (id) ON DELETE CASCADE,
-    equipment_id BIGINT NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
-    PRIMARY KEY (class_id, equipment_id)
+CREATE TABLE IF NOT EXISTS drink_ingredients (
+    drink_id BIGINT NOT NULL REFERENCES drinks (id) ON DELETE CASCADE,
+    ingredient_id BIGINT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+    PRIMARY KEY (drink_id, ingredient_id)
 );

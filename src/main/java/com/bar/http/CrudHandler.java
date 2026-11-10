@@ -4,6 +4,7 @@ import com.bar.exception.ApiException;
 import com.bar.exception.MethodNotAllowedException;
 import com.bar.exception.NotFoundException;
 import com.bar.model.BaseEntity;
+import com.bar.service.AssociationService;
 import com.bar.service.CrudService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -45,6 +46,22 @@ public class CrudHandler<T extends BaseEntity> implements HttpHandler {
             throw new MethodNotAllowedException(request.method());
         }
         return Response.ok(supplier.get());
+    }
+
+    protected Response association(Request request, long ownerId, AssociationService<?, ?> service) {
+        if (request.size() == 2) {
+            return get(request, () -> service.findTargets(ownerId));
+        }
+        if (request.size() > 3) {
+            throw new NotFoundException("route not found");
+        }
+        long targetId = request.id(2);
+        switch (request.method()) {
+            case "POST" -> service.link(ownerId, targetId);
+            case "DELETE" -> service.unlink(ownerId, targetId);
+            default -> throw new MethodNotAllowedException(request.method());
+        }
+        return Response.noContent();
     }
 
     private Response route(Request request) {
