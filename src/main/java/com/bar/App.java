@@ -1,26 +1,25 @@
 package com.bar;
 
 import com.bar.db.Database;
-import com.bar.http.CrudHandler;
-import com.bar.http.GymClassHandler;
-import com.bar.http.InstructorHandler;
-import com.bar.http.MemberHandler;
-import com.bar.http.PlanHandler;
-import com.bar.model.Equipment;
-import com.bar.model.GymClass;
-import com.bar.model.Instructor;
-import com.bar.model.Plan;
-import com.bar.repository.EquipmentRepository;
-import com.bar.repository.GymClassRepository;
-import com.bar.repository.InstructorRepository;
+import com.bar.http.CustomerHandler;
+import com.bar.http.DrinkHandler;
+import com.bar.http.IngredientHandler;
+import com.bar.http.TabHandler;
+import com.bar.http.WaiterHandler;
+import com.bar.model.Customer;
+import com.bar.model.Drink;
+import com.bar.model.Ingredient;
+import com.bar.model.Waiter;
+import com.bar.repository.CustomerRepository;
+import com.bar.repository.DrinkRepository;
+import com.bar.repository.IngredientRepository;
 import com.bar.repository.LinkRepository;
-import com.bar.repository.MemberRepository;
-import com.bar.repository.PlanRepository;
+import com.bar.repository.TabRepository;
+import com.bar.repository.WaiterRepository;
 import com.bar.service.AssociationService;
 import com.bar.service.CrudService;
-import com.bar.service.EnrollmentService;
-import com.bar.service.GymClassService;
-import com.bar.service.MemberService;
+import com.bar.service.TabItemService;
+import com.bar.service.TabService;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -32,26 +31,26 @@ public class App {
     public static void main(String[] args) throws IOException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
 
-        Database database = new Database("jdbc:h2:./data/gym");
+        Database database = new Database("jdbc:h2:./data/bar");
         database.init();
 
-        CrudService<Plan> plans = new CrudService<>(new PlanRepository(database), "plan");
-        CrudService<Instructor> instructors = new CrudService<>(new InstructorRepository(database), "instructor");
-        CrudService<Equipment> equipment = new CrudService<>(new EquipmentRepository(database), "equipment");
-        MemberService members = new MemberService(new MemberRepository(database), plans);
-        GymClassService classes = new GymClassService(new GymClassRepository(database), instructors);
+        CrudService<Customer> customers = new CrudService<>(new CustomerRepository(database), "customer");
+        CrudService<Waiter> waiters = new CrudService<>(new WaiterRepository(database), "waiter");
+        CrudService<Drink> drinks = new CrudService<>(new DrinkRepository(database), "drink");
+        CrudService<Ingredient> ingredients = new CrudService<>(new IngredientRepository(database), "ingredient");
+        TabService tabs = new TabService(new TabRepository(database), customers, waiters);
 
-        EnrollmentService enrollments = new EnrollmentService(
-                new LinkRepository(database, "class_members", "class_id", "member_id"), classes, members);
-        AssociationService<GymClass, Equipment> classEquipment = new AssociationService<>(
-                new LinkRepository(database, "class_equipment", "class_id", "equipment_id"), classes, equipment);
+        TabItemService tabItems = new TabItemService(
+                new LinkRepository(database, "tab_drinks", "tab_id", "drink_id"), tabs, drinks);
+        AssociationService<Drink, Ingredient> recipes = new AssociationService<>(
+                new LinkRepository(database, "drink_ingredients", "drink_id", "ingredient_id"), drinks, ingredients);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/plans", new PlanHandler(plans, members));
-        server.createContext("/members", new MemberHandler(members, enrollments));
-        server.createContext("/instructors", new InstructorHandler(instructors, classes));
-        server.createContext("/classes", new GymClassHandler(classes, enrollments, classEquipment));
-        server.createContext("/equipment", new CrudHandler<>(equipment, Equipment.class));
+        server.createContext("/customers", new CustomerHandler(customers, tabs));
+        server.createContext("/waiters", new WaiterHandler(waiters, tabs));
+        server.createContext("/tabs", new TabHandler(tabs, tabItems));
+        server.createContext("/drinks", new DrinkHandler(drinks, recipes));
+        server.createContext("/ingredients", new IngredientHandler(ingredients, recipes));
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
 
