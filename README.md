@@ -1,16 +1,18 @@
-# Gym API
+# Bar API
 
-API REST para gerenciar uma academia: planos, alunos, instrutores, aulas e equipamentos.
+API REST para gerenciar um bar: clientes, garçons, comandas, drinks e ingredientes.
 
 Feita só com Java 21 (JDK puro, `com.sun.net.httpserver`), JDBC, banco H2 embarcado em arquivo e Jackson para JSON. Sem frameworks.
 
 ## Modelo
 
-- `Plan` 1..N `Member`
-- `Instructor` 1..N `GymClass`
-- `Member` N..N `GymClass` (tabela `class_members`)
-- `GymClass` N..N `Equipment` (tabela `class_equipment`)
-- `Person` (abstrata) é herdada por `Member` e `Instructor`
+- `Customer` (cliente) 1..N `Tab` (comanda)
+- `Waiter` (garçom) 1..N `Tab`
+- `Tab` N..N `Drink` (tabela `tab_drinks`)
+- `Drink` N..N `Ingredient` (tabela `drink_ingredients`)
+- `Person` (abstrata) é herdada por `Customer` e `Waiter`
+
+Uma comanda com status `CLOSED` não aceita novos drinks.
 
 ## Requisitos
 
@@ -31,19 +33,19 @@ Windows:
 mvnw.cmd clean package
 ```
 
-O jar fica em `target/gym-api.jar`.
+O jar fica em `target/bar-api.jar`.
 
 ![build](screenshots/01-build.png)
 
 ## Executar
 
 ```bash
-java -jar target/gym-api.jar
+java -jar target/bar-api.jar
 ```
 
-A API sobe em `http://localhost:8080`. Para usar outra porta: `java -jar target/gym-api.jar 9090`.
+A API sobe em `http://localhost:8080`. Para usar outra porta: `java -jar target/bar-api.jar 9090`.
 
-O banco é criado automaticamente em `data/gym.mv.db` na primeira execução. Para zerar os dados, apague a pasta `data`.
+O banco é criado automaticamente em `data/bar.mv.db` na primeira execução. Para zerar os dados, apague a pasta `data`.
 
 ![run](screenshots/02-run.png)
 
@@ -51,47 +53,47 @@ O banco é criado automaticamente em `data/gym.mv.db` na primeira execução. Pa
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| GET, POST | `/plans` | lista / cria planos |
-| GET, PUT, DELETE | `/plans/{id}` | busca / atualiza / remove |
-| GET | `/plans/{id}/members` | alunos do plano |
-| GET, POST | `/members` | lista / cria alunos |
-| GET, PUT, DELETE | `/members/{id}` | busca / atualiza / remove |
-| GET | `/members/{id}/classes` | aulas do aluno |
-| GET, POST | `/instructors` | lista / cria instrutores |
-| GET, PUT, DELETE | `/instructors/{id}` | busca / atualiza / remove |
-| GET | `/instructors/{id}/classes` | aulas do instrutor |
-| GET, POST | `/classes` | lista / cria aulas |
-| GET, PUT, DELETE | `/classes/{id}` | busca / atualiza / remove |
-| GET | `/classes/{id}/members` | alunos matriculados |
-| POST, DELETE | `/classes/{id}/members/{memberId}` | matricula / cancela matrícula |
-| GET | `/classes/{id}/equipment` | equipamentos da aula |
-| POST, DELETE | `/classes/{id}/equipment/{equipmentId}` | vincula / desvincula equipamento |
-| GET, POST | `/equipment` | lista / cria equipamentos |
-| GET, PUT, DELETE | `/equipment/{id}` | busca / atualiza / remove |
+| GET, POST | `/customers` | lista / cria clientes |
+| GET, PUT, DELETE | `/customers/{id}` | busca / atualiza / remove |
+| GET | `/customers/{id}/tabs` | comandas do cliente |
+| GET, POST | `/waiters` | lista / cria garçons |
+| GET, PUT, DELETE | `/waiters/{id}` | busca / atualiza / remove |
+| GET | `/waiters/{id}/tabs` | comandas atendidas pelo garçom |
+| GET, POST | `/tabs` | lista / abre comandas |
+| GET, PUT, DELETE | `/tabs/{id}` | busca / atualiza (ex.: fechar) / remove |
+| GET | `/tabs/{id}/drinks` | drinks da comanda |
+| POST, DELETE | `/tabs/{id}/drinks/{drinkId}` | adiciona / remove drink da comanda |
+| GET, POST | `/drinks` | lista / cria drinks |
+| GET, PUT, DELETE | `/drinks/{id}` | busca / atualiza / remove |
+| GET | `/drinks/{id}/ingredients` | ingredientes do drink |
+| POST, DELETE | `/drinks/{id}/ingredients/{ingredientId}` | vincula / desvincula ingrediente |
+| GET, POST | `/ingredients` | lista / cria ingredientes |
+| GET, PUT, DELETE | `/ingredients/{id}` | busca / atualiza / remove |
+| GET | `/ingredients/{id}/drinks` | drinks que usam o ingrediente |
 
 ## Exemplos
 
-Criar plano
+Criar cliente
 
-![create plan](screenshots/03-create-plan.png)
+![create customer](screenshots/03-create-customer.png)
 
-Criar aluno
+Criar garçom
 
-![create member](screenshots/04-create-member.png)
+![create waiter](screenshots/04-create-waiter.png)
 
-Criar instrutor
+Criar drinks
 
-![create instructor](screenshots/05-create-instructor.png)
+![create drinks](screenshots/05-create-drinks.png)
 
-Criar aula
+Criar ingredientes
 
-![create class](screenshots/06-create-class.png)
+![create ingredients](screenshots/06-create-ingredients.png)
 
-Criar equipamento
+Abrir comanda
 
-![create equipment](screenshots/07-create-equipment.png)
+![create tab](screenshots/07-create-tab.png)
 
-Listar alunos
+Listar drinks
 
 ![list](screenshots/08-list-all.png)
 
@@ -99,19 +101,19 @@ Relacionamentos 1..N
 
 ![one to many](screenshots/09-one-to-many.png)
 
-Matrícula (N..N entre aula e aluno)
+Drinks na comanda (N..N entre comanda e drink)
 
-![enroll](screenshots/10-enroll-member.png)
+![tab drinks](screenshots/10-tab-drinks.png)
 
-Equipamentos da aula (N..N entre aula e equipamento)
+Ingredientes do drink (N..N entre drink e ingrediente)
 
-![class equipment](screenshots/11-class-equipment.png)
+![drink ingredients](screenshots/11-drink-ingredients.png)
 
-Atualizar
+Fechar comanda
 
 ![update](screenshots/12-update.png)
 
-Erros de validação, não encontrado e conflito
+Erros: comanda fechada, validação, não encontrado e conflito
 
 ![errors](screenshots/13-errors.png)
 
