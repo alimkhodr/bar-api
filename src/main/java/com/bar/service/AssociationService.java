@@ -20,13 +20,11 @@ public class AssociationService<O extends BaseEntity, T extends BaseEntity> {
     }
 
     public void link(long ownerId, long targetId) {
-        O owner = owners.findById(ownerId);
+        owners.findById(ownerId);
         targets.findById(targetId);
-        List<Long> linked = links.findTargets(ownerId);
-        if (linked.contains(targetId)) {
+        if (links.findTargets(ownerId).contains(targetId)) {
             throw new ConflictException("already linked");
         }
-        beforeLink(owner, linked.size());
         links.link(ownerId, targetId);
     }
 
@@ -44,8 +42,5 @@ public class AssociationService<O extends BaseEntity, T extends BaseEntity> {
     public List<O> findOwners(long targetId) {
         targets.findById(targetId);
         return links.findOwners(targetId).stream().map(owners::findById).toList();
-    }
-
-    protected void beforeLink(O owner, int linkedCount) {
     }
 }
