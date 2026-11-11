@@ -1,9 +1,38 @@
 package com.bar.model;
 
-public class Customer extends Person {
+public class Customer extends BaseEntity {
+
+    private String name;
+    private String email;
+    private String phone;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     @Override
-    public String getRole() {
-        return "CUSTOMER";
+    public void validate() {
+        check(hasText(name), "name is required");
+        check(hasText(email) && email.contains("@"), "email is invalid");
     }
 }

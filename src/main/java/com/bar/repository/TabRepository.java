@@ -19,10 +19,6 @@ public class TabRepository extends JdbcRepository<Tab> {
         return findBy("customer_id", customerId);
     }
 
-    public List<Tab> findByWaiterId(long waiterId) {
-        return findBy("waiter_id", waiterId);
-    }
-
     @Override
     protected String table() {
         return "tabs";
@@ -30,12 +26,12 @@ public class TabRepository extends JdbcRepository<Tab> {
 
     @Override
     protected List<String> columns() {
-        return List.of("table_number", "status", "customer_id", "waiter_id");
+        return List.of("table_number", "status", "waiter", "customer_id");
     }
 
     @Override
     protected List<Object> values(Tab tab) {
-        return Arrays.asList(tab.getTableNumber(), tab.getStatus().name(), tab.getCustomerId(), tab.getWaiterId());
+        return Arrays.asList(tab.getTableNumber(), tab.getStatus().name(), tab.getWaiter(), tab.getCustomerId());
     }
 
     @Override
@@ -44,8 +40,8 @@ public class TabRepository extends JdbcRepository<Tab> {
         tab.setId(resultSet.getLong("id"));
         tab.setTableNumber(resultSet.getInt("table_number"));
         tab.setStatus(TabStatus.valueOf(resultSet.getString("status")));
+        tab.setWaiter(resultSet.getString("waiter"));
         tab.setCustomerId(resultSet.getLong("customer_id"));
-        tab.setWaiterId(resultSet.getLong("waiter_id"));
         return tab;
     }
 }

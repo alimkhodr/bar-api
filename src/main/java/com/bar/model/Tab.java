@@ -4,8 +4,8 @@ public class Tab extends BaseEntity {
 
     private Integer tableNumber;
     private TabStatus status = TabStatus.OPEN;
+    private String waiter;
     private Long customerId;
-    private Long waiterId;
 
     public Integer getTableNumber() {
         return tableNumber;
@@ -23,6 +23,14 @@ public class Tab extends BaseEntity {
         this.status = status;
     }
 
+    public String getWaiter() {
+        return waiter;
+    }
+
+    public void setWaiter(String waiter) {
+        this.waiter = waiter;
+    }
+
     public Long getCustomerId() {
         return customerId;
     }
@@ -31,15 +39,7 @@ public class Tab extends BaseEntity {
         this.customerId = customerId;
     }
 
-    public Long getWaiterId() {
-        return waiterId;
-    }
-
-    public void setWaiterId(Long waiterId) {
-        this.waiterId = waiterId;
-    }
-
-    public boolean acceptsDrinks() {
+    public boolean acceptsChanges() {
         return status == TabStatus.OPEN;
     }
 
@@ -48,6 +48,5 @@ public class Tab extends BaseEntity {
         check(tableNumber != null && tableNumber > 0, "tableNumber must be positive");
         check(status != null, "status is required");
         check(customerId != null, "customerId is required");
-        check(waiterId != null, "waiterId is required");
     }
 }
