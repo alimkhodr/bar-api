@@ -1,23 +1,25 @@
 package com.bar;
 
 import com.bar.db.Database;
+import com.bar.http.CategoryHandler;
 import com.bar.http.CustomerHandler;
-import com.bar.http.DrinkHandler;
-import com.bar.http.IngredientHandler;
+import com.bar.http.MenuItemHandler;
+import com.bar.http.PromotionHandler;
 import com.bar.http.TabHandler;
-import com.bar.http.WaiterHandler;
+import com.bar.model.Category;
 import com.bar.model.Customer;
-import com.bar.model.Drink;
-import com.bar.model.Ingredient;
-import com.bar.model.Waiter;
+import com.bar.model.MenuItem;
+import com.bar.model.Promotion;
+import com.bar.repository.CategoryRepository;
 import com.bar.repository.CustomerRepository;
-import com.bar.repository.DrinkRepository;
-import com.bar.repository.IngredientRepository;
 import com.bar.repository.LinkRepository;
+import com.bar.repository.MenuItemRepository;
+import com.bar.repository.PromotionRepository;
+import com.bar.repository.TabItemRepository;
 import com.bar.repository.TabRepository;
-import com.bar.repository.WaiterRepository;
 import com.bar.service.AssociationService;
 import com.bar.service.CrudService;
+import com.bar.service.MenuItemService;
 import com.bar.service.TabItemService;
 import com.bar.service.TabService;
 import com.sun.net.httpserver.HttpServer;
@@ -35,22 +37,21 @@ public class App {
         database.init();
 
         CrudService<Customer> customers = new CrudService<>(new CustomerRepository(database), "customer");
-        CrudService<Waiter> waiters = new CrudService<>(new WaiterRepository(database), "waiter");
-        CrudService<Drink> drinks = new CrudService<>(new DrinkRepository(database), "drink");
-        CrudService<Ingredient> ingredients = new CrudService<>(new IngredientRepository(database), "ingredient");
-        TabService tabs = new TabService(new TabRepository(database), customers, waiters);
+        CrudService<Category> categories = new CrudService<>(new CategoryRepository(database), "category");
+        CrudService<Promotion> promotions = new CrudService<>(new PromotionRepository(database), "promotion");
+        MenuItemService items = new MenuItemService(new MenuItemRepository(database), categories);
+        TabService tabs = new TabService(new TabRepository(database), customers);
 
-        TabItemService tabItems = new TabItemService(
-                new LinkRepository(database, "tab_drinks", "tab_id", "drink_id"), tabs, drinks);
-        AssociationService<Drink, Ingredient> recipes = new AssociationService<>(
-                new LinkRepository(database, "drink_ingredients", "drink_id", "ingredient_id"), drinks, ingredients);
+        AssociationService<Promotion, MenuItem> promotionItems = new AssociationService<>(
+                new LinkRepository(database, "promotion_items", "promotion_id", "item_id"), promotions, items);
+        TabItemService tabItems = new TabItemService(new TabItemRepository(database), tabs, items, promotionItems);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/customers", new CustomerHandler(customers, tabs));
-        server.createContext("/waiters", new WaiterHandler(waiters, tabs));
         server.createContext("/tabs", new TabHandler(tabs, tabItems));
-        server.createContext("/drinks", new DrinkHandler(drinks, recipes));
-        server.createContext("/ingredients", new IngredientHandler(ingredients, recipes));
+        server.createContext("/categories", new CategoryHandler(categories, items));
+        server.createContext("/items", new MenuItemHandler(items, promotionItems));
+        server.createContext("/promotions", new PromotionHandler(promotions, promotionItems));
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
 
